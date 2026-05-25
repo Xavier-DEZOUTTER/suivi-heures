@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi heures atelier</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue: #185FA5;
+    --blue-dark: #0C447C;
+    --blue-light: #E6F1FB;
+    --blue-text: #0C447C;
+    --teal-light: #E1F5EE;
+    --teal-text: #085041;
+    --amber-light: #FAEEDA;
+    --amber-text: #633806;
+    --red-light: #FCEBEB;
+    --red-text: #A32D2D;
+    --green-light: #EAF3DE;
+    --green-text: #27500A;
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --surface2: #F1F0EC;
+    --border: rgba(0,0,0,0.10);
+    --border2: rgba(0,0,0,0.18);
+    --text: #1A1A18;
+    --text2: #5A5A56;
+    --text3: #8A8A84;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .app {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 3rem;
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+  .header-icon {
+    width: 40px; height: 40px;
+    background: var(--blue);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 20px; flex-shrink: 0;
+  }
+  .header-title { font-size: 17px; font-weight: 600; }
+  .header-sub { font-size: 12px; color: var(--text3); }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 1rem;
+  }
+
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; font-weight: 500;
+    transition: background 0.1s, transform 0.1s;
+    text-decoration: none;
+  }
+  .btn:hover { background: var(--surface2); }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .btn-primary:hover { background: var(--blue-dark); }
+  .btn-danger { background: var(--red-light); color: var(--red-text); border-color: transparent; }
+  .btn-danger:hover { filter: brightness(0.95); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-full { width: 100%; justify-content: center; padding: 12px; }
+  .btn-back { margin-bottom: 1rem; }
+
+  /* Forms */
+  .form-group { margin-bottom: 1rem; }
+  .form-label { font-size: 13px; color: var(--text2); margin-bottom: 5px; display: block; font-weight: 500; }
+  input[type="text"], input[type="date"], input[type="number"], input[type="password"], select, textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus { border-color: var(--blue); }
+  .row { display: flex; gap: 10px; }
+  .row .form-group { flex: 1; min-width: 0; }
+
+  /* Alert */
+  .alert {
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    margin-bottom: 1rem;
+    font-weight: 500;
+  }
+  .alert-success { background: var(--green-light); color: var(--green-text); }
+  .alert-error { background: var(--red-light); color: var(--red-text); }
+  .alert-info { background: var(--blue-light); color: var(--blue-text); }
+
+  /* Metric cards */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+    margin-bottom: 1.25rem;
+  }
+  .metric {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+  }
+  .metric-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  .metric-value { font-size: 24px; font-weight: 600; color: var(--text); }
+  .metric-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+  /* Tabs */
+  .tab-bar {
+    display: flex;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 3px;
+    margin-bottom: 1.25rem;
+    gap: 3px;
+  }
+  .tab {
+    flex: 1; padding: 8px; text-align: center;
+    font-size: 13px; font-weight: 500;
+    border-radius: calc(var(--radius-sm) - 2px);
+    cursor: pointer; border: none;
+    background: transparent; color: var(--text2);
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s, color 0.15s;
+  }
+  .tab.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left; padding: 8px 10px;
+    color: var(--text3); font-weight: 600;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--border); color: var(--text); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+
+  /* Badge */
+  .badge {
+    display: inline-block; padding: 2px 8px;
+    border-radius: 999px; font-size: 11px; font-weight: 600;
+  }
+  .badge-blue { background: var(--blue-light); color: var(--blue-text); }
+  .badge-teal { background: var(--teal-light); color: var(--teal-text); }
+  .badge-amber { background: var(--amber-light); color: var(--amber-text); }
+
+  /* PIN screen */
+  .pin-wrap { max-width: 280px; margin: 0 auto; text-align: center; }
+  .pin-dots { display: flex; gap: 12px; justify-content: center; margin: 1.25rem 0; }
+  .pin-dot {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid var(--border2);
+    background: var(--surface2);
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .pin-dot.filled { background: var(--blue); border-color: var(--blue); }
+  .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .num-btn {
+    padding: 16px; font-size: 20px; font-weight: 500; text-align: center;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--surface); cursor: pointer; color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.1s;
+    box-shadow: var(--shadow);
+  }
+  .num-btn:hover { background: var(--surface2); }
+  .num-btn:active { transform: scale(0.96); }
+
+  /* Heures picker */
+  .heures-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .h-btn {
+    padding: 10px 4px; text-align: center;
+    border: 1px solid var(--border2); border-radius: var(--radius-sm);
+    background: var(--surface); cursor: pointer;
+    font-size: 14px; font-weight: 500; font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    transition: background 0.1s, border-color 0.1s;
+  }
+  .h-btn:hover { background: var(--surface2); }
+  .h-btn.selected { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+  .heures-selected {
+    display: flex; align-items: baseline; gap: 6px;
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    margin-top: 8px;
+  }
+  .heures-selected .val { font-size: 22px; font-weight: 600; color: var(--blue); }
+  .heures-selected .unit { font-size: 13px; color: var(--text2); }
+
+  /* Config code block */
+  .code-block {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin: 10px 0;
+  }
+
+  .step {
+    display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start;
+  }
+  .step-num {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--blue); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; flex-shrink: 0; margin-top: 1px;
+  }
+  .step-content { font-size: 14px; line-height: 1.6; color: var(--text); }
+  .step-content a { color: var(--blue); }
+  code {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 4px; padding: 1px 5px;
+    font-family: 'DM Mono', monospace; font-size: 12px;
+  }
+
+  /* List items */
+  .list-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .list-item:last-child { border-bottom: none; }
+
+  .separator { height: 1px; background: var(--border); margin: 1.25rem 0; }
+  .empty { text-align: center; padding: 2rem; color: var(--text3); font-size: 14px; }
+
+  .top-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1.25rem; flex-wrap: wrap; gap: 8px;
+  }
+  .top-bar-title { font-size: 17px; font-weight: 600; }
+  .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  @media (max-width: 480px) {
+    .row { flex-direction: column; gap: 0; }
+    .metric-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+<!-- ═══════════════════════════════════════════
+     ÉCRAN ACCUEIL
+═══════════════════════════════════════════ -->
+<div id="screen-home" class="screen active">
+  <div class="header">
+    <div class="header-icon">⏱</div>
+    <div>
+      <div class="header-title">Suivi heures atelier</div>
+      <div class="header-sub" id="cfg-status-label">Vérification configuration…</div>
+    </div>
+  </div>
+
+  <div id="cfg-alert" class="alert alert-error" style="display:none">
+    ⚠ Supabase non configuré — configurer ci-dessous avant utilisation.
+  </div>
+
+  <div class="card">
+    <div class="card-title">Accès</div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="goSaisie()">✏ Saisir mes heures</button>
+      <button class="btn" onclick="showScreen('screen-pin')">📊 Tableau de bord chef</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Configuration Supabase</div>
+    <div class="form-group">
+      <label class="form-label">URL du projet</label>
+      <input type="text" id="cfg-url" placeholder="https://xxxx.supabase.co" oninput="saveConfig()">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Clé API (anon public)</label>
+      <input type="text" id="cfg-key" placeholder="eyJhbGciOi..." oninput="saveConfig()">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Code PIN chef (4 chiffres)</label>
+      <input type="password" id="cfg-pin" placeholder="1234" maxlength="4" oninput="saveConfig()">
+    </div>
+    <div style="font-size:13px; color:var(--text3); margin-top:4px;">
+      Besoin d'aide ? <a href="#" onclick="showScreen('screen-setup'); return false;" style="color:var(--blue);">Guide de configuration →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ÉCRAN GUIDE SETUP
+═══════════════════════════════════════════ -->
+<div id="screen-setup" class="screen">
+  <button class="btn btn-sm btn-back" onclick="showScreen('screen-home')">← Retour</button>
+  <div class="card">
+    <div class="card-title">Guide Supabase — 5 minutes</div>
+
+    <div class="step"><div class="step-num">1</div><div class="step-content">Va sur <a href="https://supabase.com" target="_blank">supabase.com</a> et crée un compte gratuit.</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-content">Clique <strong>New project</strong>, donne un nom (ex : <code>heures-atelier</code>), choisis un mot de passe, valide.</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-content">Attends ~1 minute que le projet démarre.</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-content">Menu gauche → <code>Settings</code> → <code>API</code>. Copie <strong>Project URL</strong> et la clé <strong>anon public</strong>, colle-les dans la configuration de l'appli.</div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-content">Menu gauche → <code>SQL Editor</code>. Colle le code ci-dessous puis clique <strong>Run</strong> :</div></div>
+
+    <div class="code-block">CREATE TABLE IF NOT EXISTS affaires (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  numero text NOT NULL UNIQUE,
+  libelle text,
+  created_at timestamptz DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS fabricants (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  prenom text NOT NULL,
+  actif boolean DEFAULT true
+);
+
+CREATE TABLE IF NOT EXISTS saisies (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  fabricant_id uuid REFERENCES fabricants(id),
+  affaire_id uuid REFERENCES affaires(id),
+  date date NOT NULL,
+  code_activite text,
+  heures numeric(4,1) NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
+
+ALTER TABLE affaires ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fabricants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE saisies ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "allow_all" ON affaires FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "allow_all" ON fabricants FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "allow_all" ON saisies FOR ALL USING (true) WITH CHECK (true);</div>
+
+    <div class="step"><div class="step-num">6</div><div class="step-content">C'est prêt ! Reviens sur l'appli, renseigne l'URL et la clé, puis va dans <strong>Tableau de bord chef → Gérer</strong> pour ajouter tes fabricants et tes affaires.</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ÉCRAN SAISIE
+═══════════════════════════════════════════ -->
+<div id="screen-saisie" class="screen">
+  <button class="btn btn-sm btn-back" onclick="showScreen('screen-home')">← Retour</button>
+  <div id="saisie-msg" style="display:none"></div>
+  <div class="card">
+    <div class="card-title">Saisie des heures</div>
+    <div class="row">
+      <div class="form-group">
+        <label class="form-label">Fabricant</label>
+        <select id="sel-fabricant"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Date</label>
+        <input type="date" id="sel-date">
+      </div>
+    </div>
+    <div class="row">
+      <div class="form-group">
+        <label class="form-label">N° affaire</label>
+        <select id="sel-affaire"></select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Code activité (optionnel)</label>
+        <select id="sel-activite">
+          <option value="">— Chantier direct —</option>
+          <option value="A01">A01 – Chargement / déchargement</option>
+          <option value="A02">A02 – Nettoyage, rangement</option>
+          <option value="A03">A03 – Préparation production</option>
+          <option value="A04">A04 – Formation, médecine</option>
+          <option value="A05">A05 – Absences / Congés</option>
+          <option value="A06">A06 – Encadrement de production</option>
+          <option value="A07">A07 – SAV</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Nombre d'heures</label>
+      <div class="heures-grid" id="heures-grid"></div>
+      <div class="heures-selected" id="heures-selected" style="display:none">
+        <span class="val" id="heures-val">—</span>
+        <span class="unit">heure(s) sélectionnée(s)</span>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="submitSaisie()">✓ Enregistrer</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ÉCRAN PIN
+═══════════════════════════════════════════ -->
+<div id="screen-pin" class="screen">
+  <button class="btn btn-sm btn-back" onclick="showScreen('screen-home')">← Retour</button>
+  <div class="card">
+    <div class="pin-wrap">
+      <div style="font-weight:600; font-size:15px; margin-bottom:4px;">Code PIN chef</div>
+      <div style="font-size:13px; color:var(--text3); margin-bottom:4px;">Accès tableau de bord</div>
+      <div class="pin-dots" id="pin-dots">
+        <div class="pin-dot" id="pd0"></div>
+        <div class="pin-dot" id="pd1"></div>
+        <div class="pin-dot" id="pd2"></div>
+        <div class="pin-dot" id="pd3"></div>
+      </div>
+      <div id="pin-error" style="color:var(--red-text); font-size:13px; min-height:20px; margin-bottom:10px; font-weight:500;"></div>
+      <div class="numpad">
+        <button class="num-btn" onclick="pinKey('1')">1</button>
+        <button class="num-btn" onclick="pinKey('2')">2</button>
+        <button class="num-btn" onclick="pinKey('3')">3</button>
+        <button class="num-btn" onclick="pinKey('4')">4</button>
+        <button class="num-btn" onclick="pinKey('5')">5</button>
+        <button class="num-btn" onclick="pinKey('6')">6</button>
+        <button class="num-btn" onclick="pinKey('7')">7</button>
+        <button class="num-btn" onclick="pinKey('8')">8</button>
+        <button class="num-btn" onclick="pinKey('9')">9</button>
+        <div></div>
+        <button class="num-btn" onclick="pinKey('0')">0</button>
+        <button class="num-btn" onclick="pinBack()">⌫</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ÉCRAN DASHBOARD
+═══════════════════════════════════════════ -->
+<div id="screen-dashboard" class="screen">
+  <div class="top-bar">
+    <div class="top-bar-title">Tableau de bord</div>
+    <div class="btn-group">
+      <button class="btn btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="btn btn-sm" onclick="showScreen('screen-admin')">⚙ Gérer</button>
+      <button class="btn btn-sm" onclick="showScreen('screen-home')">✕</button>
+    </div>
+  </div>
+
+  <div class="metric-grid" id="metrics-bar"></div>
+
+  <div class="tab-bar">
+    <button class="tab active" id="tab-chantier" onclick="switchTab('chantier')">Par chantier</button>
+    <button class="tab" id="tab-fabricant" onclick="switchTab('fabricant')">Par fabricant</button>
+    <button class="tab" id="tab-detail" onclick="switchTab('detail')">Saisies récentes</button>
+  </div>
+
+  <div id="view-chantier">
+    <div class="card">
+      <div class="card-title">Heures par affaire</div>
+      <div class="table-wrap" id="table-chantier"></div>
+    </div>
+  </div>
+  <div id="view-fabricant" style="display:none">
+    <div class="card">
+      <div class="card-title">Heures par fabricant</div>
+      <div class="table-wrap" id="table-fabricant"></div>
+    </div>
+  </div>
+  <div id="view-detail" style="display:none">
+    <div class="card">
+      <div class="card-title">50 dernières saisies</div>
+      <div class="table-wrap" id="table-detail"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ÉCRAN ADMIN
+═══════════════════════════════════════════ -->
+<div id="screen-admin" class="screen">
+  <button class="btn btn-sm btn-back" onclick="showScreen('screen-dashboard')">← Retour</button>
+
+  <div class="card">
+    <div class="card-title">Affaires</div>
+    <div class="row" style="align-items:flex-end; gap:8px;">
+      <div class="form-group" style="flex:1.5; margin-bottom:0">
+        <label class="form-label">N° affaire</label>
+        <input type="text" id="new-aff-num" placeholder="ex: 2025-012">
+      </div>
+      <div class="form-group" style="flex:2.5; margin-bottom:0">
+        <label class="form-label">Libellé</label>
+        <input type="text" id="new-aff-lib" placeholder="ex: Garde-corps résidence Oise">
+      </div>
+      <button class="btn btn-primary btn-sm" style="margin-bottom:1px; white-space:nowrap;" onclick="addAffaire()">+ Ajouter</button>
+    </div>
+    <div id="list-affaires" style="margin-top:12px;"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Fabricants</div>
+    <div style="display:flex; gap:8px; align-items:flex-end;">
+      <div class="form-group" style="flex:1; margin-bottom:0">
+        <label class="form-label">Prénom</label>
+        <input type="text" id="new-fab-prenom" placeholder="ex: Guy">
+      </div>
+      <button class="btn btn-primary btn-sm" style="margin-bottom:1px; white-space:nowrap;" onclick="addFabricant()">+ Ajouter</button>
+    </div>
+    <div id="list-fabricants" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<script>
+'use strict';
+
+let SUPABASE_URL = '';
+let SUPABASE_KEY = '';
+let PIN = '1234';
+let pinBuffer = '';
+let selectedHeures = null;
+let allSaisies = [];
+let fabricants = [];
+let affaires = [];
+let currentTab = 'chantier';
+
+const HEURES_VALUES = [0.5,1,1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8];
+
+// ── Init ──────────────────────────────────────────
+function init() {
+  loadConfig();
+  buildHeuresGrid();
+}
+
+function buildHeuresGrid() {
+  const grid = document.getElementById('heures-grid');
+  grid.innerHTML = HEURES_VALUES.map(v =>
+    `<button class="h-btn" onclick="setHeures(${v})">${v}</button>`
+  ).join('');
+}
+
+// ── Config ────────────────────────────────────────
+function loadConfig() {
+  try {
+    const cfg = JSON.parse(localStorage.getItem('hcfg') || '{}');
+    SUPABASE_URL = cfg.url || '';
+    SUPABASE_KEY = cfg.key || '';
+    PIN = cfg.pin || '1234';
+    document.getElementById('cfg-url').value = SUPABASE_URL;
+    document.getElementById('cfg-key').value = SUPABASE_KEY;
+    document.getElementById('cfg-pin').value = PIN;
+    updateCfgStatus();
+  } catch(e) {}
+}
+
+function saveConfig() {
+  SUPABASE_URL = document.getElementById('cfg-url').value.trim().replace(/\/$/, '');
+  SUPABASE_KEY = document.getElementById('cfg-key').value.trim();
+  PIN = document.getElementById('cfg-pin').value.trim() || '1234';
+  try { localStorage.setItem('hcfg', JSON.stringify({url:SUPABASE_URL, key:SUPABASE_KEY, pin:PIN})); } catch(e) {}
+  updateCfgStatus();
+}
+
+function updateCfgStatus() {
+  const ok = SUPABASE_URL && SUPABASE_KEY;
+  document.getElementById('cfg-status-label').textContent = ok ? 'Connecté à Supabase ✓' : 'Configuration requise';
+  document.getElementById('cfg-alert').style.display = ok ? 'none' : 'block';
+}
+
+// ── Supabase fetch ────────────────────────────────
+async function sb(method, table, data, params) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return null;
+  let url = SUPABASE_URL + '/rest/v1/' + table;
+  if (params) url += '?' + params;
+  const opts = {
+    method,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'return=representation' : ''
+    }
+  };
+  if (data) opts.body = JSON.stringify(data);
+  try {
+    const r = await fetch(url, opts);
+    if (!r.ok) { console.error('Supabase error', r.status, await r.text()); return null; }
+    const t = await r.text();
+    return t ? JSON.parse(t) : [];
+  } catch(e) { console.error('Fetch error', e); return null; }
+}
+
+// ── Navigation ────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+async function goSaisie() {
+  showScreen('screen-saisie');
+  await loadSaisieData();
+}
+
+// ── Saisie ────────────────────────────────────────
+async function loadSaisieData() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('sel-date').value = today;
+  fabricants = await sb('GET','fabricants',null,'select=*&actif=eq.true&order=prenom') || [];
+  affaires   = await sb('GET','affaires',null,'select=*&order=numero') || [];
+
+  const fs = document.getElementById('sel-fabricant');
+  fs.innerHTML = fabricants.length
+    ? fabricants.map(f => `<option value="${f.id}">${f.prenom}</option>`).join('')
+    : '<option value="">Aucun fabricant — ajouter via chef</option>';
+
+  const as = document.getElementById('sel-affaire');
+  as.innerHTML = affaires.length
+    ? affaires.map(a => `<option value="${a.id}">${a.numero}${a.libelle ? ' – ' + a.libelle : ''}</option>`).join('')
+    : '<option value="">Aucune affaire — ajouter via chef</option>';
+}
+
+function setHeures(v) {
+  selectedHeures = v;
+  document.querySelectorAll('.h-btn').forEach(b => {
+    b.classList.toggle('selected', parseFloat(b.textContent) === v);
+  });
+  document.getElementById('heures-val').textContent = v;
+  document.getElementById('heures-selected').style.display = 'flex';
+}
+
+async function submitSaisie() {
+  const fab  = document.getElementById('sel-fabricant').value;
+  const aff  = document.getElementById('sel-affaire').value;
+  const date = document.getElementById('sel-date').value;
+  const act  = document.getElementById('sel-activite').value;
+  const msg  = document.getElementById('saisie-msg');
+
+  if (!fab || !aff || !date || !selectedHeures) {
+    msg.className = 'alert alert-error';
+    msg.style.display = 'block';
+    msg.textContent = '⚠ Merci de remplir tous les champs et de sélectionner un nombre d\'heures.';
+    return;
+  }
+
+  const payload = { fabricant_id: fab, affaire_id: aff, date, heures: selectedHeures };
+  if (act) payload.code_activite = act;
+
+  const res = await sb('POST', 'saisies', payload);
+  msg.style.display = 'block';
+  if (res) {
+    msg.className = 'alert alert-success';
+    msg.textContent = '✓ ' + selectedHeures + ' h enregistrées pour le ' + date;
+    selectedHeures = null;
+    document.querySelectorAll('.h-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('heures-selected').style.display = 'none';
+    document.getElementById('sel-activite').value = '';
+  } else {
+    msg.className = 'alert alert-error';
+    msg.textContent = '✗ Erreur d\'enregistrement. Vérifier la configuration Supabase.';
+  }
+}
+
+// ── PIN ───────────────────────────────────────────
+function pinKey(k) {
+  if (pinBuffer.length >= 4) return;
+  pinBuffer += k;
+  updatePinDots();
+  if (pinBuffer.length === 4) {
+    setTimeout(() => {
+      if (pinBuffer === PIN) {
+        pinBuffer = '';
+        updatePinDots();
+        document.getElementById('pin-error').textContent = '';
+        showScreen('screen-dashboard');
+        loadDashboard();
+      } else {
+        document.getElementById('pin-error').textContent = '✗ Code incorrect';
+        pinBuffer = '';
+        updatePinDots();
+      }
+    }, 200);
+  }
+}
+
+function pinBack() {
+  pinBuffer = pinBuffer.slice(0, -1);
+  updatePinDots();
+}
+
+function updatePinDots() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('pd' + i).classList.toggle('filled', i < pinBuffer.length);
+  }
+}
+
+// ── Dashboard ─────────────────────────────────────
+async function loadDashboard() {
+  fabricants = await sb('GET','fabricants',null,'select=*') || [];
+  affaires   = await sb('GET','affaires',null,'select=*') || [];
+  allSaisies = await sb('GET','saisies',null,
+    'select=*,fabricants(prenom),affaires(numero,libelle)&order=date.desc') || [];
+  renderMetrics();
+  switchTab(currentTab);
+}
+
+function renderMetrics() {
+  const totalH = allSaisies.reduce((s, x) => s + parseFloat(x.heures || 0), 0);
+  const affSet = new Set(allSaisies.map(x => x.affaire_id));
+  const fabSet = new Set(allSaisies.map(x => x.fabricant_id));
+  const today  = new Date().toISOString().split('T')[0];
+  const todayH = allSaisies.filter(x => x.date === today).reduce((s, x) => s + parseFloat(x.heures || 0), 0);
+  document.getElementById('metrics-bar').innerHTML = `
+    <div class="metric"><div class="metric-label">Heures totales</div><div class="metric-value">${totalH.toFixed(1)}</div><div class="metric-sub">toutes affaires</div></div>
+    <div class="metric"><div class="metric-label">Affaires actives</div><div class="metric-value">${affSet.size}</div><div class="metric-sub">avec saisies</div></div>
+    <div class="metric"><div class="metric-label">Fabricants actifs</div><div class="metric-value">${fabSet.size}</div><div class="metric-sub">ont saisi</div></div>
+    <div class="metric"><div class="metric-label">Aujourd'hui</div><div class="metric-value">${todayH.toFixed(1)}</div><div class="metric-sub">heures saisies</div></div>
+  `;
+}
+
+function switchTab(t) {
+  currentTab = t;
+  ['chantier','fabricant','detail'].forEach(x => {
+    document.getElementById('view-' + x).style.display = x === t ? 'block' : 'none';
+    document.getElementById('tab-' + x).classList.toggle('active', x === t);
+  });
+  if (t === 'chantier')  renderByChantier();
+  if (t === 'fabricant') renderByFabricant();
+  if (t === 'detail')    renderDetail();
+}
+
+function renderByChantier() {
+  const map = {};
+  allSaisies.forEach(s => {
+    const key = s.affaire_id;
+    if (!map[key]) map[key] = { num: s.affaires?.numero || '?', lib: s.affaires?.libelle || '', total: 0, fab: {} };
+    map[key].total += parseFloat(s.heures || 0);
+    const fn = s.fabricants?.prenom || '?';
+    map[key].fab[fn] = (map[key].fab[fn] || 0) + parseFloat(s.heures || 0);
+  });
+  const rows = Object.values(map).sort((a, b) => b.total - a.total);
+  if (!rows.length) { document.getElementById('table-chantier').innerHTML = '<div class="empty">Aucune saisie pour l\'instant</div>'; return; }
+  const fabNames = [...new Set(allSaisies.map(s => s.fabricants?.prenom).filter(Boolean))].sort();
+  document.getElementById('table-chantier').innerHTML = `<table>
+    <thead><tr><th>Affaire</th><th>Libellé</th>${fabNames.map(f => `<th>${f}</th>`).join('')}<th>Total</th></tr></thead>
+    <tbody>${rows.map(r => `<tr>
+      <td><span class="badge badge-blue">${r.num}</span></td>
+      <td style="color:var(--text2)">${r.lib || '—'}</td>
+      ${fabNames.map(f => `<td>${r.fab[f] ? r.fab[f].toFixed(1) + ' h' : '—'}</td>`).join('')}
+      <td><strong>${r.total.toFixed(1)} h</strong></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function renderByFabricant() {
+  const map = {};
+  allSaisies.forEach(s => {
+    const key = s.fabricant_id;
+    const fn  = s.fabricants?.prenom || '?';
+    if (!map[key]) map[key] = { prenom: fn, total: 0, affaires: {} };
+    map[key].total += parseFloat(s.heures || 0);
+    const an = s.affaires?.numero || '?';
+    map[key].affaires[an] = (map[key].affaires[an] || 0) + parseFloat(s.heures || 0);
+  });
+  const rows = Object.values(map).sort((a, b) => b.total - a.total);
+  if (!rows.length) { document.getElementById('table-fabricant').innerHTML = '<div class="empty">Aucune saisie pour l\'instant</div>'; return; }
+  document.getElementById('table-fabricant').innerHTML = `<table>
+    <thead><tr><th>Fabricant</th><th>Total</th><th>Répartition</th></tr></thead>
+    <tbody>${rows.map(r => `<tr>
+      <td><strong>${r.prenom}</strong></td>
+      <td>${r.total.toFixed(1)} h</td>
+      <td style="font-size:12px; color:var(--text2)">${Object.entries(r.affaires).map(([k,v]) => `${k} : ${v.toFixed(1)} h`).join(' · ')}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+function renderDetail() {
+  const recent = allSaisies.slice(0, 50);
+  if (!recent.length) { document.getElementById('table-detail').innerHTML = '<div class="empty">Aucune saisie pour l\'instant</div>'; return; }
+  document.getElementById('table-detail').innerHTML = `<table>
+    <thead><tr><th>Date</th><th>Fabricant</th><th>Affaire</th><th>Activité</th><th>Heures</th></tr></thead>
+    <tbody>${recent.map(s => `<tr>
+      <td style="white-space:nowrap">${s.date}</td>
+      <td>${s.fabricants?.prenom || '?'}</td>
+      <td><span class="badge badge-blue">${s.affaires?.numero || '?'}</span></td>
+      <td style="font-size:12px; color:var(--text2)">${s.code_activite || '—'}</td>
+      <td><strong>${parseFloat(s.heures).toFixed(1)} h</strong></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ── Export CSV ────────────────────────────────────
+function exportCSV() {
+  if (!allSaisies.length) { alert('Aucune donnée à exporter.'); return; }
+  const header = ['Date','Fabricant','N° Affaire','Libellé','Code activité','Heures'];
+  const rows   = allSaisies.map(s => [
+    s.date,
+    s.fabricants?.prenom || '',
+    s.affaires?.numero || '',
+    s.affaires?.libelle || '',
+    s.code_activite || '',
+    s.heures
+  ]);
+  const csv  = [header, ...rows].map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = 'heures_atelier_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+}
+
+// ── Admin ─────────────────────────────────────────
+async function loadAdmin() {
+  fabricants = await sb('GET','fabricants',null,'select=*&order=prenom') || [];
+  affaires   = await sb('GET','affaires',null,'select=*&order=numero') || [];
+
+  document.getElementById('list-affaires').innerHTML = affaires.length
+    ? affaires.map(a => `<div class="list-item">
+        <span><span class="badge badge-blue">${a.numero}</span> ${a.libelle || ''}</span>
+        <button class="btn btn-sm btn-danger" onclick="deleteAffaire('${a.id}')">🗑</button>
+      </div>`).join('')
+    : '<div class="empty" style="padding:1rem 0">Aucune affaire</div>';
+
+  document.getElementById('list-fabricants').innerHTML = fabricants.length
+    ? fabricants.map(f => `<div class="list-item">
+        <span>${f.prenom} <span class="badge ${f.actif ? 'badge-teal' : 'badge-amber'}">${f.actif ? 'actif' : 'inactif'}</span></span>
+        <button class="btn btn-sm btn-danger" onclick="deleteFabricant('${f.id}')">🗑</button>
+      </div>`).join('')
+    : '<div class="empty" style="padding:1rem 0">Aucun fabricant</div>';
+}
+
+async function addAffaire() {
+  const num = document.getElementById('new-aff-num').value.trim();
+  const lib = document.getElementById('new-aff-lib').value.trim();
+  if (!num) return;
+  const res = await sb('POST','affaires',{ numero: num, libelle: lib || null });
+  if (res) {
+    document.getElementById('new-aff-num').value = '';
+    document.getElementById('new-aff-lib').value = '';
+    await loadAdmin();
+  }
+}
+
+async function deleteAffaire(id) {
+  if (!confirm('Supprimer cette affaire ? Les saisies associées resteront en base.')) return;
+  await sb('DELETE','affaires',null,'id=eq.' + id);
+  await loadAdmin();
+}
+
+async function addFabricant() {
+  const p = document.getElementById('new-fab-prenom').value.trim();
+  if (!p) return;
+  const res = await sb('POST','fabricants',{ prenom: p, actif: true });
+  if (res) {
+    document.getElementById('new-fab-prenom').value = '';
+    await loadAdmin();
+  }
+}
+
+async function deleteFabricant(id) {
+  if (!confirm('Supprimer ce fabricant ?')) return;
+  await sb('DELETE','fabricants',null,'id=eq.' + id);
+  await loadAdmin();
+}
+
+// Intercept admin screen to load data
+const _showScreen = showScreen;
+window.showScreen = function(id) {
+  _showScreen(id);
+  if (id === 'screen-admin') loadAdmin();
+};
+
+// ── Start ─────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
